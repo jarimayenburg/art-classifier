@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM tensorflow/tensorflow:latest-gpu-py3
 
 # Install all required packages
 COPY requirements.txt .
