@@ -1,2 +1,2 @@
-# art-classifier
-Art classifier for Hackalod
+# Art classifier
+Art classifier for Hackalod. Classifies art based on linked data
