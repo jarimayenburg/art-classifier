@@ -148,4 +148,5 @@ def train(input_network, training_input, training_output):
 def make_prediction(input_network, images):
     predictions = input_network.predict(images)
     guesses = np.argmax(predictions, axis=1)
+    print(guesses)
     return guesses

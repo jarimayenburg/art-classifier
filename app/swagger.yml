@@ -17,13 +17,9 @@ paths:
         description: Image to test with
         required: true
         content:
-          multipart/form-data:
+          text/plain:
             schema:
-              type: object
-              properties:
-                img:
-                  type: string
-                  format: binary
+              type: string
       responses:
         200:
           description: "Succesful query operation"
