@@ -13,6 +13,6 @@ def query(body):
     extension = "." + fileformat.split('/')[1] # Set the local file extension (.png)
 
     im = Image.open(BytesIO(b64decode(encoded)))
-    resize(im, 64)
+    im = resize(im, 64)
 
     return make_prediction(config.neuralnet, im)
