@@ -3,17 +3,12 @@
 from flask import Flask
 from connexion import App
 from classifier import api, network
-
-app = App(__name__, specification_dir='./')
-
-# Read the Swagger specification
-app.add_api('swagger.yml')
+import numpy as np
 
 # Entrypoint
 if __name__ == '__main__':
+    print("Retrieving training data...")
     training_data = network.get_training_data(64)
-    print(training_data)
-    print(len(training_data))
 
     # Prepare labels
     labels = list()
@@ -27,20 +22,24 @@ if __name__ == '__main__':
                 data['ic'] = i
                 break
 
-    print(training_data)
-    print(len(labels))
-
+    print("Building network...")
     neuralnet = network.get_network(64, len(labels))
 
-    training_input = list()
-    training_output = list()
+    training_input = []
+    training_output = []
 
     for data in training_data:
         training_input.append(data['img'])
         training_output.append(data['ic'])
 
+    training_input = np.array(training_input)
+    training_output = np.array(training_output)
+
+    print("Training network...")
     history = network.train(neuralnet, training_input, training_output)
 
-    print(history)
+    app = App(__name__, specification_dir='./')
+    app.add_api('swagger.yml')
+    app.run(debug=True, host='0.0.0.0')
 
-    # app.run(debug=True, host='0.0.0.0')
+    print("Done, ready for predictions")

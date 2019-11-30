@@ -52,7 +52,6 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
     localfailed = 0
     localok = 0
 
-    print("Thread processing " + str(len(datapoints)) + " entries")
     for datapoint in datapoints:
         # Get image URL
         img = datapoint['img']['value']
@@ -65,7 +64,6 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
             try:
                 response = requests.get(img, timeout=20)
                 localok += 1
-                print("Succesfully retreived (" + str(tries + 1) + " tries): " + img)
                 break
             except requests.RequestException:
                 tries += 1
@@ -83,16 +81,12 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
 
         localentries.append(entry)
 
-    print("Adding local entries to global entries")
-
     lock.acquire()
     counters['ok'] += localok
     counters['fail'] += localfailed
     for localentry in localentries:
         data.append(localentry)
     lock.release()
-
-    print("Thread done")
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
@@ -124,7 +118,6 @@ def get_training_data(img_size):
 
     current_thread = 0
     for thread in threads:
-        print("Waiting for " + str(current_thread))
         thread.join()
         current_thread += 1
 
@@ -134,16 +127,20 @@ def get_training_data(img_size):
     return data
 
 def get_network(input_size, output_size):
-    return tf.keras.Sequential([
+    graph = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(input_size, input_size, 3)),
         tf.keras.layers.Dense(1000, activation='relu'),
         tf.keras.layers.Dense(500, activation='softmax'),
         tf.keras.layers.Dense(output_size)
-    ]).compile(
+    ])
+
+    graph.compile(
         optimizer='adam',
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
+
+    return graph
 
 def train(input_network, training_input, training_output):
     return input_network.fit(training_input, training_output, 64, 10)
