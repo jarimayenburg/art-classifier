@@ -43,7 +43,7 @@ def get_training_data_raw():
     ?sub dc:subject ?ic .
     ?ic skos:broader ?broader .
     FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
-    } order by ?img limit 500
+    } order by ?img limit 5000
     """)
 
     sparql.setReturnFormat(JSON)
