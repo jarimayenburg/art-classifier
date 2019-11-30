@@ -5,6 +5,8 @@ from connexion import App
 from classifier import api, network
 import numpy as np
 
+neuralnet = None
+
 # Entrypoint
 if __name__ == '__main__':
     print("Retrieving training data...")
