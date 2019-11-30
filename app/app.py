@@ -9,6 +9,8 @@ app = App(__name__, specification_dir='./')
 # Read the Swagger specification
 app.add_api('swagger.yml')
 
+neuralnet = None
+
 # Entrypoint
 if __name__ == '__main__':
     training_data = network.get_training_data(64)
@@ -43,4 +45,4 @@ if __name__ == '__main__':
 
     print(history)
 
-    # app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')
