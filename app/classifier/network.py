@@ -145,8 +145,8 @@ def get_network(input_size, output_size):
 def train(input_network, training_input, training_output):
     return input_network.fit(training_input, training_output, 64, 10)
 
-def make_prediction(input_network, images):
-    predictions = input_network.predict(images)
+def make_prediction(input_network, image):
+    predictions = input_network.predict(np.array(image))
     guesses = np.argmax(predictions, axis=1)
     print(guesses)
     return guesses
