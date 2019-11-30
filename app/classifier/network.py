@@ -29,7 +29,7 @@ def resize(image, size):
     return image_matrix
 
 
-def get_training_data_raw(k=250, n=2):
+def get_training_data_raw(k=10000, n=2):
     # result["img"]["value"]
     # result["ic"]["value"]
     # k = grootte per query
