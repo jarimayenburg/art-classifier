@@ -1,0 +1,23 @@
+swagger: "2.0"
+
+info:
+  title: Art classifier API
+  description: API for the art classifier
+  version: "1.0.0"
+
+basePath: "/api"
+
+paths:
+  /query:
+    post:
+      operationId: "classifier.api.query"
+      description: Query the classifier
+      responses:
+        200:
+          description: "Succesful query operation"
+          schema:
+            properties:
+              icons:
+                type: array
+                items:
+                  type: string
