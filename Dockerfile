@@ -11,5 +11,5 @@ EXPOSE 5000
 
 WORKDIR /root/
 
-ENTRYPOINT ["python"]
+ENTRYPOINT ["python", "-u"]
 CMD ["./app.py"]
