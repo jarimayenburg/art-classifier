@@ -5,6 +5,7 @@ from PIL import Image
 from io import BytesIO
 from SPARQLWrapper import SPARQLWrapper, JSON
 from threading import Thread, Lock, Semaphore
+import json
 import config
 
 def make_square(im, fill_color=(0, 0, 0)):
@@ -82,10 +83,12 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
         img = img + '=s' + str(img_size)
 
         # Get actual image
+        response = None
         tries = 0
         while tries < 4:
             try:
                 response = requests.get(img, timeout=20)
+                print("Succesfully retrieved entry (" + str(tries + 1) + " tries) with URL: " + str(img))
                 localok += 1
                 break
             except requests.RequestException:
@@ -94,6 +97,7 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
         if(tries >= 4):
             localfailed += 1
             print("Skipping entry with URL: " + img)
+            continue
 
         img = Image.open(BytesIO(response.content))
         img = resize(img, img_size)
@@ -169,7 +173,7 @@ def get_network(input_size, output_size):
 
     graph.compile(
         optimizer=opt,
-        loss='sparse_categorical_crossentropy',
+        loss='categorical_crossentropy',
         metrics=['accuracy']
     )
 
@@ -177,25 +181,24 @@ def get_network(input_size, output_size):
 
 def train(input_network, training_input, training_output):
     scaled_input = training_input / 255
-    scaled_input += np.min(scaled_input)
+    scaled_input -= np.min(scaled_input)
     scaled_input /= np.max(scaled_input)
 
     return input_network.fit(scaled_input, training_output, 32, 1)
 
 def make_prediction(input_network, image):
     np_image = np.array(image) / 255
-    np_image += np.min(np_image)
+    np_image -= np.min(np_image)
     np_image /= np.max(np_image)
 
     predictions = input_network.predict(np.array([np_image]))[0]
-    predictions += np.min(predictions)
+    predictions -= np.min(predictions)
     predictions /= np.max(predictions)
 
     to_return = []
-
     for i in range(len(predictions)):
-        if predictions[i] > 0.70:
+        if predictions[i] > 0.75:
             to_return.append(config.labels[i])
 
     print(to_return)
-    return to_return
+    return json.dumps(to_return)

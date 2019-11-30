@@ -22,14 +22,13 @@ if __name__ == '__main__':
 
     for data in training_data:
         containedlabels = list()
-        for label in data['ic']:
-            for i in range(len(labels)):
-                if label == labels[i]:
-                    containedlabels.append(i)
+        for label in labels:
+            if label in data['ic']:
+                containedlabels.append(1.0)
+            else:
+                containedlabels.append(0.0)
         data['ic'] = containedlabels
-        print(containedlabels)
 
-    print(training_data)
     print("Building network...")
     config.neuralnet = network.get_network(64, len(labels))
     config.labels = labels
@@ -41,19 +40,8 @@ if __name__ == '__main__':
         training_input.append(data['img'])
         training_output.append(data['ic'])
 
-    final_training_input = []
-    final_training_output = []
-
-    for i in range(len(training_input)):
-        for iconvalue in training_output[i]:
-            final_training_input.append(training_input[i])
-            final_training_output.append(iconvalue)
-
-    print(np.shape(final_training_input))
-    print(np.shape(final_training_output))
-
     print("Training network...")
-    history = network.train(config.neuralnet, np.array(final_training_input), np.array(final_training_output))
+    history = network.train(config.neuralnet, np.array(training_input), np.array(training_output))
 
     app = App(__name__, specification_dir='./')
     app.add_api('swagger.yml')
