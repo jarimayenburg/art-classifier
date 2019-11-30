@@ -22,12 +22,12 @@ if __name__ == '__main__':
 
     for data in training_data:
         containedlabels = list()
-        for label in labels:
-            if label in data['ic']:
-                containedlabels.append(1.0)
-            else:
-                containedlabels.append(0.0)
+        for label in data['ic']:
+            for i in range(len(labels)):
+                if label == labels[i]:
+                    containedlabels.append(i)
         data['ic'] = containedlabels
+        print(containedlabels)
 
     print(training_data)
     print("Building network...")
@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     print(np.shape(final_training_input))
     print(np.shape(final_training_output))
+
     print("Training network...")
     history = network.train(config.neuralnet, np.array(final_training_input), np.array(final_training_output))
 
