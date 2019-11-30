@@ -16,4 +16,4 @@ def query(body):
     im = Image.open(BytesIO(b64decode(encoded)))
     resize(im, 64)
 
-    return neuralnet.predict(im)
+    return make_prediction.predict(neuralnet, im)
