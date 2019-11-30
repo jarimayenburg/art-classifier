@@ -28,39 +28,45 @@ def resize(image, size):
     return image_matrix
 
 
-def get_training_data_raw():
-    sparql = SPARQLWrapper("https://api.data.netwerkdigitaalerfgoed.nl/datasets/hackalod/RM-PublicDomainImages/services/RM-PublicDomainImages/sparql")
-    sparql.setQuery("""
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX dc: <http://purl.org/dc/elements/1.1/>
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-
-    SELECT distinct ?img ?ic ?broader WHERE {
-    ?src <http://www.europeana.eu/schemas/edm/isShownBy> ?img .
-    ?src <http://www.europeana.eu/schemas/edm/isShownAt> ?sub .
-
-    ?sub dc:subject ?ic .
-    ?ic skos:broader ?broader .
-    FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
-    } order by ?img limit 5000
-    """)
-
-    sparql.setReturnFormat(JSON)
-    results =  sparql.query().convert()
-
+def get_training_data_raw(k=500, n=3):
+    # result["img"]["value"]
+    # result["ic"]["value"]
+    # k = grootte per query
+    # n = aantal queries
     resdict = {}
 
-    for result in results["results"]["bindings"]:
-        if (result["img"]["value"] not in resdict.keys()):
-            resdict[result["img"]["value"]] = []
+    for i in range(n):
+        print("Doing round %d of %d with size %d" % (i + 1, n, k))
+        sparql = SPARQLWrapper("https://api.data.netwerkdigitaalerfgoed.nl/datasets/hackalod/RM-PublicDomainImages/services/RM-PublicDomainImages/sparql")
+        sparql.setQuery("""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX dc: <http://purl.org/dc/elements/1.1/>
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 
-        currentList = result["img"]["value"]
-        if (result["ic"]["value"] not in currentList):
-            resdict[result["img"]["value"]].append(result["ic"]["value"])
+        SELECT distinct ?img ?ic ?broader WHERE {
+        ?src <http://www.europeana.eu/schemas/edm/isShownBy> ?img .
+        ?src <http://www.europeana.eu/schemas/edm/isShownAt> ?sub .
+        
+        ?sub dc:subject ?ic .
+        ?ic skos:broader ?broader .
+        FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
+        } LIMIT %d OFFSET %d
+        """ % (k, i * k))
 
-        if (result["broader"]["value"] not in currentList):
-            resdict[result["img"]["value"]].append(result["broader"]["value"])
+        sparql.setReturnFormat(JSON)
+        results =  sparql.query().convert()
+
+        for result in results["results"]["bindings"]:
+            if (result["img"]["value"] not in resdict.keys()):
+                resdict[result["img"]["value"]] = []
+
+            currentList = result["img"]["value"]
+            if (result["ic"]["value"] not in currentList):
+                resdict[result["img"]["value"]].append(result["ic"]["value"])
+            
+            if (result["broader"]["value"] not in currentList):
+                resdict[result["img"]["value"]].append(result["broader"]["value"])
 
     return resdict
 
@@ -148,23 +154,24 @@ def get_training_data(img_size):
     return data
 
 def get_network(input_size, output_size):
+    opt = tf.keras.optimizers.Adam(learning_rate=0.00001)
     graph = tf.keras.Sequential([
         tf.keras.layers.Flatten(input_shape=(input_size, input_size, 3)),
         tf.keras.layers.Dense(1000, activation='relu'),
-        tf.keras.layers.Dense(500, activation='softmax'),
+        tf.keras.layers.Dense(500, activation='relu'),
         tf.keras.layers.Dense(output_size)
     ])
 
     graph.compile(
-        optimizer='adam',
-        loss='sparse_categorical_crossentropy',
+        optimizer=opt,
+        loss='mean_squared_error',
         metrics=['accuracy']
     )
 
     return graph
 
 def train(input_network, training_input, training_output):
-    return input_network.fit(training_input, training_output, 32, 10)
+    return input_network.fit(training_input, training_output, 32, 1)
 
 def make_prediction(input_network, image):
     predictions = input_network.predict(np.array([np.array(image)]))
