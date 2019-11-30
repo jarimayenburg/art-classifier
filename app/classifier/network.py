@@ -171,11 +171,26 @@ def get_network(input_size, output_size):
     return graph
 
 def train(input_network, training_input, training_output):
-    return input_network.fit(training_input, training_output, 32, 1)
+    scaled_input = training_input / 255
+    scaled_input += np.min(scaled_input)
+    scaled_input /= np.max(scaled_input)
+
+    return input_network.fit(scaled_input, training_output, 32, 1)
 
 def make_prediction(input_network, image):
-    predictions = input_network.predict(np.array([np.array(image)]))
-    print(predictions)
-    guesses = np.argmax(predictions, axis=1)
+    np_image = np.array(image) / 255
+    np_image += np.min(np_image)
+    np_image /= np.max(np_image)
 
-    return config.labels[guesses[0]]
+    predictions = input_network.predict(np.array([np_image]))[0]
+    predictions += np.min(predictions)
+    predictions /= np.max(predictions)
+
+    to_return = []
+
+    for i in range(len(predictions)):
+        if predictions[i] > 0.70:
+            to_return.append(config.labels[i])
+
+    print(to_return)
+    return to_return
