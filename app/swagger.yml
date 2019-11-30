@@ -1,23 +1,32 @@
-swagger: "2.0"
+openapi: "3.0.0"
 
 info:
   title: Art classifier API
   description: API for the art classifier
-  version: "1.0.0"
+  version: "0.1"
 
-basePath: "/api"
+servers:
+  - url: /api
 
 paths:
   /query:
     post:
       operationId: "classifier.api.query"
       description: Query the classifier
+      requestBody:
+        description: Image to test with
+        required: true
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
       responses:
         200:
           description: "Succesful query operation"
-          schema:
-            properties:
-              icons:
+          content:
+            application/json:
+              schema:
                 type: array
                 items:
                   type: string

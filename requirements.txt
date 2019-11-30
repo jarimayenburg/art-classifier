@@ -1,4 +1,3 @@
 Flask==1.1.1
 connexion==2.4.0
 Pillow
-matplotlib

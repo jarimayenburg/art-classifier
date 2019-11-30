@@ -1,2 +1,4 @@
-def query():
-    pass
+# Classifier API endpoints
+
+def query(body):
+    return [];
