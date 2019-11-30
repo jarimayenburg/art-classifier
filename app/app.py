@@ -43,7 +43,10 @@ if __name__ == '__main__':
 
     training_input = np.array(training_input)
 
-    print(training_output)
+    # print(training_input)
+    print(np.shape(training_input))
+    print(np.shape(training_output))
+    # print(training_output)
     print("Training network...")
     history = network.train(config.neuralnet, training_input, training_output)
 
