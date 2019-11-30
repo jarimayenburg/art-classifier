@@ -154,11 +154,16 @@ def get_training_data(img_size):
     return data
 
 def get_network(input_size, output_size):
-    opt = tf.keras.optimizers.Adam(learning_rate=0.00001)
+    opt = tf.keras.optimizers.Adam(learning_rate=0.1)
     graph = tf.keras.Sequential([
-        tf.keras.layers.Flatten(input_shape=(input_size, input_size, 3)),
-        tf.keras.layers.Dense(1000, activation='relu'),
-        tf.keras.layers.Dense(500, activation='relu'),
+        tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(64, 64, 3)),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(1024, activation='relu'),
         tf.keras.layers.Dense(output_size)
     ])
 
