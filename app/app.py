@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
     print("Building network...")
     config.neuralnet = network.get_network(64, len(labels))
+    config.labels = labels
 
     training_input = []
     training_output = []

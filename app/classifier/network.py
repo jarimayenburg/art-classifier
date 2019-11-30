@@ -5,6 +5,7 @@ from PIL import Image
 from io import BytesIO
 from SPARQLWrapper import SPARQLWrapper, JSON
 from threading import Thread, Lock, Semaphore
+import config
 
 def make_square(im, fill_color=(0, 0, 0)):
     """
@@ -148,5 +149,5 @@ def train(input_network, training_input, training_output):
 def make_prediction(input_network, image):
     predictions = input_network.predict(np.array([np.array(image)]))
     guesses = np.argmax(predictions, axis=1)
-    print(guesses)
-    return guesses
+
+    return config.labels(guesses[0])
