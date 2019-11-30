@@ -16,15 +16,20 @@ if __name__ == '__main__':
     # Prepare labels
     labels = list()
     for data in training_data:
-        if data['ic'] not in labels:
-            labels.append(data['ic'])
+        for label in data['ic']:
+            if label not in labels:
+                labels.append(label)
 
     for data in training_data:
-        for i in range(len(labels)):
-            if labels[i] == data['ic']:
-                data['ic'] = i
-                break
+        containedlabels = list()
+        for label in labels:
+            if label in data['ic']:
+                containedlabels.append(1.0)
+            else:
+                containedlabels.append(0.0)
+        data['ic'] = containedlabels
 
+    print(training_data)
     print("Building network...")
     config.neuralnet = network.get_network(64, len(labels))
     config.labels = labels
@@ -34,11 +39,11 @@ if __name__ == '__main__':
 
     for data in training_data:
         training_input.append(data['img'])
-        training_output.append(data['ic'])
+        training_output.append(np.array(data['ic']))
 
     training_input = np.array(training_input)
-    training_output = np.array(training_output)
 
+    print(training_output)
     print("Training network...")
     history = network.train(config.neuralnet, training_input, training_output)
 

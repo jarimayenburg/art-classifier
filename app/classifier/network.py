@@ -29,24 +29,40 @@ def resize(image, size):
 
 
 def get_training_data_raw():
-    # result["img"]["value"]
-    # result["ic"]["value"]
     sparql = SPARQLWrapper("https://api.data.netwerkdigitaalerfgoed.nl/datasets/hackalod/RM-PublicDomainImages/services/RM-PublicDomainImages/sparql")
     sparql.setQuery("""
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX dc: <http://purl.org/dc/elements/1.1/>
-    SELECT distinct ?img ?ic WHERE {
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+    SELECT distinct ?img ?ic ?broader WHERE {
     ?src <http://www.europeana.eu/schemas/edm/isShownBy> ?img .
     ?src <http://www.europeana.eu/schemas/edm/isShownAt> ?sub .
 
     ?sub dc:subject ?ic .
+    ?ic skos:broader ?broader .
     FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
-    }
+    } order by ?img limit 500
     """)
 
     sparql.setReturnFormat(JSON)
-    return sparql.query().convert()
+    results =  sparql.query().convert()
+
+    resdict = {}
+
+    for result in results["results"]["bindings"]:
+        if (result["img"]["value"] not in resdict.keys()):
+            resdict[result["img"]["value"]] = []
+
+        currentList = result["img"]["value"]
+        if (result["ic"]["value"] not in currentList):
+            resdict[result["img"]["value"]].append(result["ic"]["value"])
+
+        if (result["broader"]["value"] not in currentList):
+            resdict[result["img"]["value"]].append(result["broader"]["value"])
+
+    return resdict
 
 def get_single_data_instance(img_size, datapoints, data, lock, counters):
     localentries = list()
@@ -55,7 +71,7 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
 
     for datapoint in datapoints:
         # Get image URL
-        img = datapoint['img']['value']
+        img = datapoint['img']
         img = img[:-3]
         img = img + '=s' + str(img_size)
 
@@ -77,7 +93,7 @@ def get_single_data_instance(img_size, datapoints, data, lock, counters):
         img = resize(img, img_size)
         img = np.array(img)
 
-        ic = datapoint['ic']['value']
+        ic = datapoint['ic']
         entry = {'img': img, 'ic': ic}
 
         localentries.append(entry)
@@ -96,7 +112,11 @@ def divide_chunks(l, n):
 def get_training_data(img_size):
     data = list()
     print("Getting raw training data JSON")
-    raw_data = get_training_data_raw()['results']['bindings']
+    rawer_data = get_training_data_raw()
+    raw_data = list()
+
+    for imgkey in rawer_data:
+        raw_data.append({'img': imgkey, 'ic': rawer_data[imgkey]})
 
     # For progress tracking
     threads = list()
@@ -144,7 +164,7 @@ def get_network(input_size, output_size):
     return graph
 
 def train(input_network, training_input, training_output):
-    return input_network.fit(training_input, training_output, 64, 10)
+    return input_network.fit(training_input, training_output, 32, 10)
 
 def make_prediction(input_network, image):
     predictions = input_network.predict(np.array([np.array(image)]))
