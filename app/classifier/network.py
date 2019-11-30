@@ -42,7 +42,7 @@ def get_training_data_raw():
 
     ?sub dc:subject ?ic .
     FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
-    } LIMIT 500
+    }
     """)
 
     sparql.setReturnFormat(JSON)
