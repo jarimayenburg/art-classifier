@@ -28,7 +28,7 @@ def resize(image, size):
     return image_matrix
 
 
-def get_training_data_raw(k=500, n=3):
+def get_training_data_raw(k=1000, n=5):
     # result["img"]["value"]
     # result["ic"]["value"]
     # k = grootte per query
@@ -47,7 +47,7 @@ def get_training_data_raw(k=500, n=3):
         SELECT distinct ?img ?ic ?broader WHERE {
         ?src <http://www.europeana.eu/schemas/edm/isShownBy> ?img .
         ?src <http://www.europeana.eu/schemas/edm/isShownAt> ?sub .
-        
+
         ?sub dc:subject ?ic .
         ?ic skos:broader ?broader .
         FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
@@ -64,7 +64,7 @@ def get_training_data_raw(k=500, n=3):
             currentList = result["img"]["value"]
             if (result["ic"]["value"] not in currentList):
                 resdict[result["img"]["value"]].append(result["ic"]["value"])
-            
+
             if (result["broader"]["value"] not in currentList):
                 resdict[result["img"]["value"]].append(result["broader"]["value"])
 
@@ -164,7 +164,7 @@ def get_network(input_size, output_size):
 
     graph.compile(
         optimizer=opt,
-        loss='mean_squared_error',
+        loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
 
