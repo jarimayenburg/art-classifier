@@ -29,15 +29,10 @@ def resize(image, size):
     return image_matrix
 
 
-def get_training_data_raw(k=10000, n=2):
-    # result["img"]["value"]
-    # result["ic"]["value"]
-    # k = grootte per query
-    # n = aantal queries
-    resdict = {}
-
-    for i in range(n):
-        print("Doing round %d of %d with size %d" % (i + 1, n, k))
+def get_training_data_thread(num, offset, mutex, resdict):
+    print("Thread started (offset %d)" % offset)
+    locked_mutex = False
+    try:
         sparql = SPARQLWrapper("https://api.data.netwerkdigitaalerfgoed.nl/datasets/hackalod/RM-PublicDomainImages/services/RM-PublicDomainImages/sparql")
         sparql.setQuery("""
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -53,11 +48,13 @@ def get_training_data_raw(k=10000, n=2):
         ?ic skos:broader ?broader .
         FILTER(CONTAINS(str(?ic), "http://iconclass.org")) .
         } LIMIT %d OFFSET %d
-        """ % (k, i * k))
+        """ % (num, offset))
 
         sparql.setReturnFormat(JSON)
         results =  sparql.query().convert()
 
+        mutex.acquire()
+        locked_mutex = True
         for result in results["results"]["bindings"]:
             if (result["img"]["value"] not in resdict.keys()):
                 resdict[result["img"]["value"]] = []
@@ -68,6 +65,30 @@ def get_training_data_raw(k=10000, n=2):
 
             if (result["broader"]["value"] not in currentList):
                 resdict[result["img"]["value"]].append(result["broader"]["value"])
+        mutex.release()
+        locked_mutex = False
+        print("Offset %d done" % offset)
+    except Exception as e:
+        print(e)
+        if(locked_mutex):
+            mutex.unlock()
+        print("Error at offset %d, skipping" % offset)
+
+def get_training_data_raw(k=10000, n=1000):
+    resdict = {}
+    threads = list()
+    mutex = Lock()
+
+    for i in range(n):
+        thread = Thread(target = get_training_data_thread, args = (k, k * i, mutex, resdict))
+        thread.start()
+        threads.append(thread)
+
+    threadcounter = 0
+    for threadobject in threads:
+        print("Waiting for %d" % threadcounter)
+        threadobject.join()
+        threadcounter += 1
 
     return resdict
 
