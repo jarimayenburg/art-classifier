@@ -11,7 +11,7 @@ if __name__ == '__main__':
     config.init()
 
     print("Retrieving training data...")
-    training_data = network.get_training_data(64)
+    training_data = network.get_training_data(256)
 
     # Prepare labels
     labels = list()
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         data['ic'] = containedlabels
 
     print("Building network...")
-    config.neuralnet = network.get_network(64, len(labels))
+    config.neuralnet = network.get_network(256, len(labels))
     config.labels = labels
 
     training_input = []
@@ -42,9 +42,8 @@ if __name__ == '__main__':
 
     print("Training network...")
     history = network.train(config.neuralnet, np.array(training_input), np.array(training_output))
+    print("Done, ready for predictions")
 
     app = App(__name__, specification_dir='./')
     app.add_api('swagger.yml')
     app.run(debug=True, host='0.0.0.0', use_reloader=False)
-
-    print("Done, ready for predictions")

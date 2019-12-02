@@ -74,13 +74,21 @@ def get_training_data_thread(num, offset, mutex, resdict):
             mutex.unlock()
         print("Error at offset %d, skipping" % offset)
 
-def get_training_data_raw(k=10000, n=1000):
+def get_training_data_master(num, offsets, mutex, resdict):
+    for offset in offsets:
+        get_training_data_thread(num, offset, mutex, resdict)
+
+def get_training_data_raw(k=10000, n=64):
     resdict = {}
     threads = list()
     mutex = Lock()
+    num_threads = 64
+    offsets = [k * i for i in range(n)]
 
-    for i in range(n):
-        thread = Thread(target = get_training_data_thread, args = (k, k * i, mutex, resdict))
+    offsets = list(divide_chunks(offsets, num_threads))
+
+    for offset in offsets:
+        thread = Thread(target = get_training_data_master, args = (k, offset, mutex, resdict))
         thread.start()
         threads.append(thread)
 
@@ -181,7 +189,7 @@ def get_training_data(img_size):
 def get_network(input_size, output_size):
     opt = tf.keras.optimizers.Adam(learning_rate=0.1)
     graph = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(64, 64, 3)),
+        tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(input_size, input_size, 3)),
         tf.keras.layers.MaxPooling2D(2, 2),
         tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
         tf.keras.layers.MaxPooling2D(2, 2),
